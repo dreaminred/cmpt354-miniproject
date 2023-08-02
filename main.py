@@ -134,12 +134,12 @@ def volunteer(user_id, user_type):
 def ask_for_help():
 	with conn:
 		cur = conn.cursor()
-		sql_query = "SELECT firstName, lastName FROM Librarian"
+		sql_query = "SELECT firstName, lastName, department FROM Librarian WHERE department <> \"volunteer\""
 		cur.execute(sql_query)
 
 		rows = cur.fetchall()
 		index = random.randint(0, len(rows) - 1)
-		print(f"{rows[index][0]} {rows[index][1]} will be assisting you.")
+		print(f"\n{rows[index][0]} {rows[index][1]} ({rows[index][2]}) will be assisting you.")
 
 def find_item():
 	type_query = None
