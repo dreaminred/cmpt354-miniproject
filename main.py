@@ -93,6 +93,9 @@ def return_item(user_id, user_type):
 					return
 		else:
 			print("Cannot return this item.")
+			return
+
+		print(f"Successfully returned item.")
 
 def volunteer(user_id, user_type):
 	if user_id == None:
