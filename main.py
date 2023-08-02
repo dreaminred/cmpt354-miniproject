@@ -7,8 +7,6 @@ from os import path
 
 conn = sqlite3.connect(path.join("notebooks", "library.db"))
 
-user_id = None
-user_type = None # User/Librarian
 
 def main():
 	print("# Library #")
@@ -20,7 +18,7 @@ def main():
 
 		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Volunteer", "Ask for help", "Return an item", "Exit")
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Volunteer", "Ask for help", "Exit")
 
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
@@ -35,9 +33,11 @@ def main():
 		elif option == 5: # Donate an item
 			donate()
 		elif option == 6:
-			confirmation = find_events() # Find an event and return whether user wants to register for it
+			confirmation = find_events(user_id, user_type) # Find an event and return whether user wants to register for it
 			if confirmation == True:
 				print("Registered for event")
+			else:
+				print("Failed to register")
 		elif option == 7:
 			volunteer(user_id, user_type)
 		elif option == 8:
@@ -486,64 +486,75 @@ def chk_conn(conn):
 	except Exception as ex:
 		 return False
 
-def find_events():
+def find_events(user_id='None', user_type='user'):
 	"""
 	Finds events and asks whether the user wants to register for them"""
 	print("Filter by: ")
-	user_option = create_options_list("By Room", "By Date Range", "By Audience") #Prompt user to input filter type
+	user_option = create_options_list("By Room", "By Audience", "By Date Range") #Prompt user to input filter type
 	attribute = ['room', 'audience']
 
 	# Prompt user to input filter values
 	if (user_option==0):
 		input_user = get_non_empty_string("Enter targeted room:",4)
 	elif (user_option==1):
+		input_user = get_non_empty_string("Enter targeted audience:",10)
+	elif (user_option==2):
 		input_startTS = get_non_empty_string("Enter starting timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):", 20)
 		input_endTS = get_non_empty_string("Enter ending timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):", 20)
-	elif (user_option==2):
-		input_user = get_non_empty_string("Enter targeted audience:",10)
 	else:
 		print("Invalid Entry: " + str(user_option))
 		return False
 
 	# Create the appropriate query 
-	if ((user_option==0) or (user_option==2)):
-		eventQuery = "SELECT * FROM Event WHERE " + attribute[user_option] +"=:userInput"
-	if ((user_option==1)):
+	if ((user_option==0) or (user_option==1)):
+		eventQuery = "SELECT * FROM Event WHERE " + attribute[user_option]+"=\""+input_user + "\""
+		print(eventQuery)
+	if ((user_option==2)):
 		eventQuery = "SELECT * FROM Event WHERE " + "startTS" + " BETWEEN \"" + input_startTS + "\" AND \"" + input_endTS + "\""
 		print(eventQuery)
 
 	# Get rows
-	try:
-		df = pd.read_sql_query(eventQuery,conn)
-	except:
-		print("Unable to read query to dataframe.")
-		return False
-	
-	# Display options
-	print(df[['startTS', 'endTS', 'room', 'eventName']].loc[:])
+	with conn:
+		cur = conn.cursor()
+		try:
+			cur.execute(eventQuery)
+		except:
+			print("Unable to execute query")
 
-	registrationOption = get_int("To register for an event, enter 1. \nTo go back to the main menu, enter 0.",0)
+	rows = cur.fetchall()
+
+	# Display results
+	for row, rowNum in zip(rows, range(len(rows))):
+		rowString = ""
+		for attrib in range(8):
+			rowString += str(rowNum) + ". " + str(row[attrib]) + ", "
+		print(rowString)
+		
+	# Prompt whether users wants to register for an event
+	registrationOption = get_int("To register for an event, enter 1. \nTo go back to the main menu, enter 0.\n",0)
 	if(registrationOption!=1):
 		return False
+	else:
+		if(((user_id==None) or (user_id=='Missing')) or (user_type!='User')):
+			print('You are not logged into a User account.')
+			return False
 	
+	# Ask for the desired event for registration
+	registrationOption2 = get_int("Enter the event number: ",0)
+	startDate = rows[registrationOption2][0]
+	room = rows[registrationOption2][2]
 
+	# Attempt Registration
+	with conn:
+		cur = conn.cursor()
 
-
-
-	
-	
-	
-
-	
-
-
-			
-
-
-def register_for_event():
-
-	pass
-
+		sql_query = "INSERT INTO EventRegistration(startTS, room, userID) VALUES (:startTS, :room, :userID)"
+		while True:
+			try:
+				cur.execute(sql_query, {'startTS': startDate, 'room': room, 'userID': user_id})
+				return True
+			except:
+				return False
 
 if __name__=='__main__':
 	main()
