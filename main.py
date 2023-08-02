@@ -1,5 +1,6 @@
 import sqlite3
 import random
+import datetime
 import pandas as pd
 from os import path
 
@@ -19,7 +20,7 @@ def main():
 
 		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Volunteer", "Ask for help", "Exit")
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Volunteer", "Ask for help", "Return an item", "Exit")
 
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
@@ -41,9 +42,57 @@ def main():
 			volunteer(user_id, user_type)
 		elif option == 8:
 			ask_for_help()
+		elif option == 9:
+			return_item(user_id, user_type)
 		else:
 			conn.close()
 			print("Database closed successfully.")
+
+def return_item(user_id, user_type):
+	if user_id == None:
+		print("Must be logged in")
+		return
+
+	if user_type != "User":
+		print("You must be logged in as a user.")
+		return
+
+	# List out currently borrowed items
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT BorrowedItem.libraryItemID, itemName, author, dueDate FROM BorrowedItem NATURAL JOIN LibraryItem NATURAL JOIN Item WHERE userID=:id AND returnedDate IS NULL ORDER BY dueDate asc"
+		cur.execute(sql_query, {'id': user_id})
+
+		rows = cur.fetchall()
+		print("\n### Currently borrowing ###\n")
+		if rows:
+			for row in rows:
+				print(f"- [{row[0]}]: {row[1]} by {row[2]} DUE ON {row[3]}")
+		else:
+			print("---")
+			return
+
+	return_item_id = get_int("Enter id of item to return: ", 0)
+
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT BorrowedItem.libraryItemID, userID, dueDate FROM BorrowedItem NATURAL JOIN LibraryItem WHERE BorrowedItem.libraryItemID=:libID AND userID=:userID AND dueDate IS NOT NULL AND returnedDate IS NULL"
+		cur.execute(sql_query, {'libID': return_item_id, 'userID': user_id})
+
+		row = cur.fetchone()
+
+		if row:
+			with conn:
+				current_datetime = datetime.datetime.now()
+				cur = conn.cursor()
+				sql_query = f"UPDATE BorrowedItem SET returnedDate=:returned WHERE dueDate=:due AND libraryItemID=:libID AND userID=:userID"
+				try:
+					cur.execute(sql_query, {'returned': current_datetime, 'libID': row[0], 'userID': row[1], 'due': row[2]})
+				except sqlite3.IntegrityError:
+					print("Failed to return item")
+					return
+		else:
+			print("Cannot return this item.")
 
 def volunteer(user_id, user_type):
 	if user_id == None:
@@ -121,7 +170,7 @@ def borrow_item(user_id, user_type):
 		print("\nYou must be logged in to borrow items\n")
 		return
 
-	if user_type == 'Librarian':
+	if user_type != 'User':
 		print("\nYou must be logged into a user account to take out items\n")
 		return
 
@@ -223,6 +272,7 @@ def borrow_item(user_id, user_type):
 					cur.execute(sql_query, {'user': user_id, 'item': library_item_id})
 				except sqlite3.IntegrityError:
 					print("Sorry, you failed to take out this item.")
+					return
 
 			print(f"Successfully borrowed {row[0]} by {row[1]}.")
 		else:
