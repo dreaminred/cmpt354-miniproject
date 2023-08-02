@@ -1,7 +1,6 @@
 import sqlite3
 import random
 import datetime
-import pandas as pd
 from os import path
 
 
@@ -18,7 +17,7 @@ def main():
 
 		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Volunteer", "Ask for help", "Exit")
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Volunteer", "Ask for help", "Return an Item", "Exit")
 
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
