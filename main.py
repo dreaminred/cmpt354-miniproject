@@ -191,15 +191,15 @@ def get_int(prompt, min):
 	return user_input
 
 def chk_conn(conn): 
-     """
+	"""
 	 Checks whether conn is open or closed. Returns True/False if Open/Closed
 
 	 Sourced from https://stackoverflow.com/questions/35368117/how-do-i-check-if-a-sqlite3-database-is-connected-in-python#:~:text=Create%20a%20boolean%20flag%20(say,set%20the%20flag%20to%20true.
 	 """
-	 try:
+	try:
 		conn.cursor()
 		return True
-	 except Exception as ex:
+	except Exception as ex:
 		 return False
 
 
