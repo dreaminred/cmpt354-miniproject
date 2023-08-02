@@ -321,9 +321,6 @@ def donate():
 	print(f"Added \"{title_query}\" to library [id: {library_item_id}]")
 	print("\n")
 
-def find_event():
-	print("TODO")
-
 def get_id_from_signup():
 	"""
 	Ask user to sign up and return the unique id from a user.
