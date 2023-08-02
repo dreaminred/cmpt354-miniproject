@@ -1,23 +1,33 @@
 import sqlite3
 from os import path
 
+
 conn = sqlite3.connect(path.join("notebooks", "library.db"))
+
+user_id = None
+user_type = None # User/Librarian
 
 def main():
 	print("# Library #")
+	
+	while (chk_conn(conn)):
+		option = create_options_list("User signup", "User login", "Staff login", "Find an event", "Register for an event", "Exit")
+		
+		if option == 0:
+			user_id = get_id_from_signup()
+		elif option == 1:
+			user_id = get_id_from_login(False)
+		elif option == 2:
+			user_id = get_id_from_login(True)
+		elif option == 3:
+			user_id = get_id_from_login(True)
+		elif option == 4:
+			user_id = get_id_from_login(True)
+		else:
+			conn.close()
+			print("Database closed successfully.")
 
-	option = create_options_list("User signup", "User login", "Staff login")
-
-	if option == 0:
-		user_id = get_id_from_signup()
-	elif option == 1:
-		user_id = get_id_from_login(False)
-	else:
-		user_id = get_id_from_login(True)
-
-	if conn:
-		conn.close()
-		print("Database closed successfully.")
+		
 
 def get_id_from_signup():
 	"""
@@ -48,10 +58,32 @@ def get_id_from_signup():
 
 
 def get_id_from_login(is_librarian=False):
+	"""
+	Ask user/librarian for their respective ID
+	"""
 	if is_librarian:
-		print("TODO: Staff/Volunteer Login")
+		input_id = get_int('Enter LibrarianID: ', 0)
+
+		cur = conn.cursor()
+
+		nameQuery = "SELECT firstName, lastName FROM Librarian WHERE librarianID=:libID"
+
+		cur.execute(nameQuery,{'libID':input_id})
+
+		rows = cur.fetchall()
+
+		if rows:
+			print("Welcome!")
+		else:
+			print("LibrarianID not recognized.")
+
+
+		for row in rows:
+			print(row[1])
+		print("\n")
+
 	else:
-		print("TODO: User Login")
+		input_id = get_int('Enter UserID: ', 0)
 
 	return -1
 
@@ -119,6 +151,17 @@ def get_int(prompt, min):
 			print(f"Invalid integer. Input must be >= {min}")
 
 	return user_input
+
+def chk_conn(conn):
+     """
+	 Checks whether conn is open or closed. Returns True/False if Open/Closed
+	 """
+     try:
+        conn.cursor()
+        return True
+     except Exception as ex:
+        return False
+
 
 if __name__=='__main__':
 	main()
