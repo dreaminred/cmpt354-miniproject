@@ -30,7 +30,7 @@ def main():
 		elif option == 4:
 			user_id = get_id_from_login(True) # Borrow an item
 		elif option == 5:
-			user_id = get_id_from_login(True) # Donate an item
+			donate()
 		elif option == 6:
 			user_id = get_id_from_login(True) # Find an event		
 		elif option == 7:
@@ -51,7 +51,7 @@ def find_item():
 
 	with conn:
 		cur = conn.cursor()
-		sql_query = "SELECT Item.itemID, itemName, author FROM LibraryItem NATURAL JOIN Item WHERE type=:type AND itemName=:title AND author=:author"
+		sql_query = "SELECT libraryItemID, itemName, author FROM LibraryItem NATURAL JOIN Item WHERE type=:type AND itemName=:title AND author=:author"
 		cur.execute(sql_query, {'type':type_query, 'title':title_query, 'author':author_query})
 
 		rows = cur.fetchall()
@@ -64,6 +64,46 @@ def find_item():
 		else:
 			print("Item not in library")
 		print("\n")
+
+def donate():
+	type_query = None
+	while type_query != "movie" and type_query != "book" and type_query != "song" and type_query != "paper":
+		type_query = get_non_empty_string("Type of item [book/movie/song/paper]: ", 30)
+		if type_query != "book" and type_query != "movie" and type_query != "song" and type_query != "paper":
+			print("Invalid type. Must be either \"book\", \"movie\", \"song\", \"paper\"")
+
+	title_query = get_non_empty_string("Enter title: ", 30)
+	author_query = get_non_empty_string("Enter author: ", 30)
+
+	# Add to Item
+	item_id = 0
+	with conn:
+		cur = conn.cursor()
+
+		sql_query = "INSERT INTO Item(itemID, author, itemName, type) VALUES (:id, :author, :itemName, :type)"
+		while True:
+			try:
+				cur.execute(sql_query, {'id': item_id, 'author': author_query, 'itemName': title_query, 'type': type_query})
+				break;
+			except sqlite3.IntegrityError:
+				item_id = item_id + 1
+
+	# Add to LibraryItem
+	library_item_id = 0
+	with conn:
+		cur = conn.cursor()
+
+		sql_query = "INSERT INTO LibraryItem(libraryItemID, itemID) VALUES (:id, :item_id)"
+		while True:
+			try:
+				cur.execute(sql_query, {'id': library_item_id, 'item_id': item_id})
+				break;
+			except sqlite3.IntegrityError:
+				library_item_id = library_item_id + 1
+
+	print("\n")
+	print(f"Added \"{title_query}\" to library [id: {library_item_id}]")
+	print("\n")
 
 def get_id_from_signup():
 	"""
