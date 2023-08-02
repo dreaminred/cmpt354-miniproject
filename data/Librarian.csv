@@ -1,6 +1,12 @@
 librarianID,firstName,lastName,department,salary
-0,Polly,Dunn,catalog,47000
-1,Paul,Mahle,infotech,45000
-2,Jose,Hoskins,circulation,77000
-3,Edwin,Powell,circulation,71000
-4,Joe,Black,volunteer,0
+0,Barbara,Fortner,infotech,46000
+1,Eugenia,King,admin,61000
+2,Joseph,Taylor,circulation,52000
+3,Robert,Grays,admin,48000
+4,Lucy,Johnson,catalog,71000
+5,Amy,Espada,catalog,52000
+6,Joseph,Barrier,admin,90000
+7,Linda,Lamb,admin,74000
+8,Luella,Holiday,admin,76000
+9,Todd,Norris,circulation,55000
+10,Joe,Black,volunteer,0

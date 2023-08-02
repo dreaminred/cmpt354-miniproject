@@ -1,31 +1,10 @@
-userID,firstName,lastName,age,fines
-0,Kermit,Mcloughlin,32,0.0
-1,Dannie,Horton,40,0.0
-2,John,Monge,36,0.0
-3,June,Niday,36,0.0
-4,Roy,Shaffer,61,0.0
-5,Jefferson,Moss,8,0.0
-6,Lawrence,Owens,27,0.0
-7,Randell,Baker,37,0.0
-8,Deloise,Luten,53,0.0
-9,Karen,Boyd,8,0.0
-10,Shante,Shedden,59,0.0
-11,Nathaniel,Kamaka,33,0.0
-12,Gregory,Taylor,31,0.0
-13,Tony,Kelley,31,0.0
-14,Marilyn,Quinn,53,3.0
-15,Stephen,Cook,8,0.0
-16,Glen,Treffert,42,0.0
-17,Christina,Dvorak,15,0.0
-18,Frank,Jordan,12,0.0
-19,Lonnie,Sharrar,61,0.0
-20,Candida,Dicks,51,0.0
-21,Melissa,Davis,68,0.0
-22,Maggie,Stutzman,36,0.0
-23,Laurence,Picton,21,0.0
-24,Tracy,Knight,51,0.0
-25,Patricia,Ash,64,0.0
-26,April,Bailey,25,0.0
-27,Cory,Takacs,55,0.0
-28,Dorothy,Heep,22,3.0
-29,Gerald,Lucas,22,0.0
+startTS,room,userID
+2023-06-25 12:00,A1,23
+2023-06-25 12:00,A1,6
+2023-08-09 10:00,A2,20
+2023-08-09 10:00,A2,28
+2023-08-09 10:00,A2,2
+2023-08-09 10:00,A2,8
+2023-08-09 10:00,A2,16
+2023-08-01 10:00,A2,15
+2023-08-01 10:00,A2,20
