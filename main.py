@@ -27,14 +27,14 @@ def main():
 			user_id, user_type = get_id_from_login(True) # Staff login
 		elif option == 3: # Finding an item
 			find_item()
-		elif option == 4:
-			user_id = get_id_from_login(True) # Borrow an item
-		elif option == 5:
+		elif option == 4: # Borrow an item
+			user_id = get_id_from_login(True)
+		elif option == 5: # Donate an item
 			donate()
-		elif option == 6:
-			user_id = get_id_from_login(True) # Find an event		
-		elif option == 7:
-			user_id = get_id_from_login(True) # Register for an event	
+		elif option == 6: # find an event
+			find_event()
+		elif option == 7: # Register for an event
+			user_id = get_id_from_login(True)
 		else:
 			conn.close()
 			print("Database closed successfully.")
@@ -104,6 +104,9 @@ def donate():
 	print("\n")
 	print(f"Added \"{title_query}\" to library [id: {library_item_id}]")
 	print("\n")
+
+def find_event():
+	print("TODO")
 
 def get_id_from_signup():
 	"""
