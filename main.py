@@ -1,4 +1,5 @@
 import sqlite3
+import pandas as pd
 from os import path
 
 
@@ -32,9 +33,10 @@ def main():
 		elif option == 5: # Donate an item
 			donate()
 		elif option == 6:
-			event_option = find_events(True) # Find an event and return whether user wants to register for it
-			if event_option == True:
-				register_for_event()
+			confirmation = find_events() # Find an event and return whether user wants to register for it
+			if confirmation == True:
+				print("Registered for event")
+	
 		else:
 			conn.close()
 			print("Database closed successfully.")
@@ -270,31 +272,49 @@ def chk_conn(conn):
 		 return False
 
 def find_events():
+	"""
+	Finds events and asks whether the user wants to register for them"""
 	print("Filter by: ")
-	option = create_options_list("By Room", "By Date Range", "By Audience")
+	user_option = create_options_list("By Room", "By Date Range", "By Audience") #Prompt user to input filter type
 	attribute = ['room', 'audience']
 
-	if (option==0):
-		input_audience = get_non_empty_string("Enter targeted room:")
-
-	if (option==1):
-		input_startTS = get_non_empty_string("Enter starting timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):")
-		input_endTS = get_non_empty_string("Enter ending timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):")
-	if (option==2):
-		input_audience = get_non_empty_string("Enter targeted audience:")
+	# Prompt user to input filter values
+	if (user_option==0):
+		input_user = get_non_empty_string("Enter targeted room:",4)
+	elif (user_option==1):
+		input_startTS = get_non_empty_string("Enter starting timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):", 20)
+		input_endTS = get_non_empty_string("Enter ending timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):", 20)
+	elif (user_option==2):
+		input_user = get_non_empty_string("Enter targeted audience:",10)
 	else:
-		print("Invalid Entry: " + str(option))
+		print("Invalid Entry: " + str(user_option))
+		return False
+
+	# Create the appropriate query 
+	if ((user_option==0) or (user_option==2)):
+		eventQuery = "SELECT * FROM Event WHERE " + attribute[user_option] +"=:userInput"
+	if ((user_option==1)):
+		eventQuery = "SELECT * FROM Event WHERE " + "startTS" + " BETWEEN \"" + input_startTS + "\" AND \"" + input_endTS + "\""
+		print(eventQuery)
+
+	# Get rows
+	try:
+		df = pd.read_sql_query(eventQuery,conn)
+	except:
+		print("Unable to read query to dataframe.")
 		return False
 	
-	cur = conn.cursor()
+	# Display options
+	print(df[['startTS', 'endTS', 'room', 'eventName']].loc[:])
+
+	registrationOption = get_int("To register for an event, enter 1. \nTo go back to the main menu, enter 0.",0)
+	if(registrationOption!=1):
+		return False
 	
-	if ((option==0) or (option==2)):
 
-		eventQuery = "SELECT * FROM Librarian WHERE "+ " "+"=:libID"
 
-	cur.execute(nameQuery,{'libID':input_id})
 
-	rows = cur.fetchall()
+
 	
 	
 	
