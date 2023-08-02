@@ -25,8 +25,8 @@ def main():
 			user_id, user_type = get_id_from_login(False) # User login
 		elif option == 2:
 			user_id, user_type = get_id_from_login(True) # Staff login
-		elif option == 3:
-			user_id = get_id_from_login(True) # Find an item
+		elif option == 3: # Finding an item
+			find_item()
 		elif option == 4:
 			user_id = get_id_from_login(True) # Borrow an item
 		elif option == 5:
@@ -39,7 +39,31 @@ def main():
 			conn.close()
 			print("Database closed successfully.")
 
-		
+def find_item():
+	type_query = None
+	while type_query != "movie" and type_query != "book" and type_query != "song" and type_query != "paper":
+		type_query = get_non_empty_string("Type of item [book/movie/song/paper]: ", 30)
+		if type_query != "book" and type_query != "movie" and type_query != "song" and type_query != "paper":
+			print("Invalid type. Must be either \"book\", \"movie\", \"song\", \"paper\"")
+
+	title_query = get_non_empty_string("Enter title: ", 30)
+	author_query = get_non_empty_string("Enter author: ", 30)
+
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT Item.itemID, itemName, author FROM LibraryItem NATURAL JOIN Item WHERE type=:type AND itemName=:title AND author=:author"
+		cur.execute(sql_query, {'type':type_query, 'title':title_query, 'author':author_query})
+
+		rows = cur.fetchall()
+
+		print("\n")
+		if rows:
+			print("Found item:")
+			for row in rows:
+				print(f"- (ID: {row[0]}) {row[1]} by {row[2]}")
+		else:
+			print("Item not in library")
+		print("\n")
 
 def get_id_from_signup():
 	"""
