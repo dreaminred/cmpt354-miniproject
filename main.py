@@ -38,12 +38,47 @@ def main():
 			if confirmation == True:
 				print("Registered for event")
 		elif option == 7:
-			print("volunteer")
+			volunteer(user_id, user_type)
 		elif option == 8:
 			ask_for_help()
 		else:
 			conn.close()
 			print("Database closed successfully.")
+
+def volunteer(user_id, user_type):
+	if user_id == None:
+		print("Must be logged in")
+		return
+
+	if user_type != "User":
+		print("You must be logged in as a user.")
+		return
+
+	first_name = None
+	last_name = None
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT firstName, lastName FROM User WHERE userID=:id"
+		cur.execute(sql_query, {'id': user_id})
+
+		row = cur.fetchone()
+
+		first_name = row[0]
+		last_name = row[1]
+
+	id = 0
+	with conn:
+		cur = conn.cursor()
+		sql_query = "INSERT INTO Librarian(librarianID, firstName, lastName, department) VALUES(:libID, :firstName, :lastName, :department)"
+
+		while True:
+			try:
+				cur.execute(sql_query, {'libID': id, 'firstName': first_name, 'lastName': last_name, 'department': 'volunteer'})
+				break;
+			except sqlite3.IntegrityError:
+				id = id + 1
+
+	print(f"Success. You are now a volunteer and can log in as Staff using the id {id} in `Staff Login`")
 
 def ask_for_help():
 	with conn:
