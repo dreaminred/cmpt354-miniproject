@@ -9,20 +9,32 @@ user_type = None # User/Librarian
 
 def main():
 	print("# Library #")
-	
+
+	user_id = None
+	user_type = None # User/Librarian	
+
 	while (chk_conn(conn)):
-		option = create_options_list("User signup", "User login", "Staff login", "Find an event", "Register for an event", "Exit")
+
+
+		print_credentials(user_id, user_type)
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Register for an event", "Exit")
 		
 		if option == 0:
-			user_id = get_id_from_signup()
+			user_id = get_id_from_signup() #Signup
 		elif option == 1:
-			user_id = get_id_from_login(False)
+			user_id, user_type = get_id_from_login(False) # User login
 		elif option == 2:
-			user_id = get_id_from_login(True)
+			user_id, user_type = get_id_from_login(True) # Staff login
 		elif option == 3:
-			user_id = get_id_from_login(True)
+			user_id = get_id_from_login(True) # Find an item
 		elif option == 4:
-			user_id = get_id_from_login(True)
+			user_id = get_id_from_login(True) # Borrow an item
+		elif option == 5:
+			user_id = get_id_from_login(True) # Donate an item
+		elif option == 6:
+			user_id = get_id_from_login(True) # Find an event		
+		elif option == 7:
+			user_id = get_id_from_login(True) # Register for an event	
 		else:
 			conn.close()
 			print("Database closed successfully.")
@@ -59,10 +71,15 @@ def get_id_from_signup():
 
 def get_id_from_login(is_librarian=False):
 	"""
-	Ask user/librarian for their respective ID
+	Ask user/librarian for their respective ID. 
+	Returns a tuple with their ID and respective ID type. 
+	Returns 'Missing' for both if ID does not exist
 	"""
+	returnedID = 'Missing'
+	returnedIDType = 'Missing'
+
 	if is_librarian:
-		input_id = get_int('Enter LibrarianID: ', 0)
+		input_id = get_int('Enter librarianID: ', 0)
 
 		cur = conn.cursor()
 
@@ -73,19 +90,40 @@ def get_id_from_login(is_librarian=False):
 		rows = cur.fetchall()
 
 		if rows:
-			print("Welcome!")
+			print("Welcome " + rows[0][0] + " " + rows[0][1] + "!")
+			returnedID = input_id
+			returnedIDType = 'Librarian'
 		else:
-			print("LibrarianID not recognized.")
+			print("librarianID not recognized.")
 
-
-		for row in rows:
-			print(row[1])
-		print("\n")
 
 	else:
-		input_id = get_int('Enter UserID: ', 0)
+		input_id = get_int('Enter userID: ', 0)
 
-	return -1
+		cur = conn.cursor()
+
+		nameQuery = "SELECT firstName, lastName FROM User WHERE userID=:usID"
+
+		cur.execute(nameQuery,{'usID':input_id})
+
+		rows = cur.fetchall()
+
+		if rows:
+			print("Welcome " + rows[0][0] + " " + rows[0][1] + "!")
+			returnedID = input_id
+			returnedIDType = 'User'
+		else:
+			print("userID not recognized.")
+
+	return returnedID, returnedIDType
+
+
+def print_credentials(id, idType):
+	creds = [' ',' ']
+	creds[0] = ('Missing') if (id == None) else id
+	creds[1] = ('Missing') if (idType == None) else idType
+	print('Credentials (userID, Type): ' + str(creds[0]) + '(' + str(creds[1]) +')')
+
 
 def create_options_list(*options):
 	"""
@@ -152,9 +190,11 @@ def get_int(prompt, min):
 
 	return user_input
 
-def chk_conn(conn):
+def chk_conn(conn): 
      """
 	 Checks whether conn is open or closed. Returns True/False if Open/Closed
+
+	 Sourced from https://stackoverflow.com/questions/35368117/how-do-i-check-if-a-sqlite3-database-is-connected-in-python#:~:text=Create%20a%20boolean%20flag%20(say,set%20the%20flag%20to%20true.
 	 """
      try:
         conn.cursor()
