@@ -196,11 +196,11 @@ def chk_conn(conn):
 
 	 Sourced from https://stackoverflow.com/questions/35368117/how-do-i-check-if-a-sqlite3-database-is-connected-in-python#:~:text=Create%20a%20boolean%20flag%20(say,set%20the%20flag%20to%20true.
 	 """
-     try:
-        conn.cursor()
-        return True
-     except Exception as ex:
-        return False
+	 try:
+		conn.cursor()
+		return True
+	 except Exception as ex:
+		 return False
 
 
 if __name__=='__main__':
