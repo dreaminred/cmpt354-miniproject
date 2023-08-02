@@ -1,4 +1,5 @@
 import sqlite3
+import random
 import pandas as pd
 from os import path
 
@@ -45,7 +46,14 @@ def main():
 			print("Database closed successfully.")
 
 def ask_for_help():
-	print('todo')
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT firstName, lastName FROM Librarian"
+		cur.execute(sql_query)
+
+		rows = cur.fetchall()
+		index = random.randint(0, len(rows) - 1)
+		print(f"{rows[index][0]} {rows[index][1]} will be assisting you.")
 
 def find_item():
 	type_query = None
