@@ -18,8 +18,8 @@ def main():
 
 		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Register for an event", "Exit")
-		
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Volunteer", "Ask for help", "Exit")
+
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
 		elif option == 1:
@@ -36,10 +36,16 @@ def main():
 			confirmation = find_events() # Find an event and return whether user wants to register for it
 			if confirmation == True:
 				print("Registered for event")
-	
+		elif option == 7:
+			print("volunteer")
+		elif option == 8:
+			ask_for_help()
 		else:
 			conn.close()
 			print("Database closed successfully.")
+
+def ask_for_help():
+	print('todo')
 
 def find_item():
 	type_query = None
