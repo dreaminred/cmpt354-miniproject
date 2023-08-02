@@ -1,4 +1,6 @@
 import sqlite3
+import random
+import pandas as pd
 from os import path
 
 
@@ -13,10 +15,10 @@ def main():
 
 	while (chk_conn(conn)):
 
-
+		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Exit")
-		
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find an event", "Volunteer", "Ask for help", "Exit")
+
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
 		elif option == 1:
@@ -26,7 +28,7 @@ def main():
 		elif option == 3: # Finding an item
 			find_item()
 		elif option == 4: # Borrow an item
-			user_id = get_id_from_login(True)
+			borrow_item(user_id, user_type)
 		elif option == 5: # Donate an item
 			donate()
 		elif option == 6:
@@ -35,9 +37,58 @@ def main():
 				print("Registered for event")
 			else:
 				print("Failed to register")
+		elif option == 7:
+			volunteer(user_id, user_type)
+		elif option == 8:
+			ask_for_help()
 		else:
 			conn.close()
 			print("Database closed successfully.")
+
+def volunteer(user_id, user_type):
+	if user_id == None:
+		print("Must be logged in")
+		return
+
+	if user_type != "User":
+		print("You must be logged in as a user.")
+		return
+
+	first_name = None
+	last_name = None
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT firstName, lastName FROM User WHERE userID=:id"
+		cur.execute(sql_query, {'id': user_id})
+
+		row = cur.fetchone()
+
+		first_name = row[0]
+		last_name = row[1]
+
+	id = 0
+	with conn:
+		cur = conn.cursor()
+		sql_query = "INSERT INTO Librarian(librarianID, firstName, lastName, department) VALUES(:libID, :firstName, :lastName, :department)"
+
+		while True:
+			try:
+				cur.execute(sql_query, {'libID': id, 'firstName': first_name, 'lastName': last_name, 'department': 'volunteer'})
+				break;
+			except sqlite3.IntegrityError:
+				id = id + 1
+
+	print(f"Success. You are now a volunteer and can log in as Staff using the id {id} in `Staff Login`")
+
+def ask_for_help():
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT firstName, lastName FROM Librarian"
+		cur.execute(sql_query)
+
+		rows = cur.fetchall()
+		index = random.randint(0, len(rows) - 1)
+		print(f"{rows[index][0]} {rows[index][1]} will be assisting you.")
 
 def find_item():
 	type_query = None
@@ -58,12 +109,125 @@ def find_item():
 
 		print("\n")
 		if rows:
-			print("Found item:")
+			print("Found item (note: some of them may currently be borrowed out/pending to be included on shelf):")
 			for row in rows:
 				print(f"- (ID: {row[0]}) {row[1]} by {row[2]}")
 		else:
 			print("Item not in library")
 		print("\n")
+
+def borrow_item(user_id, user_type):
+	if user_id == None:
+		print("\nYou must be logged in to borrow items\n")
+		return
+
+	if user_type == 'Librarian':
+		print("\nYou must be logged into a user account to take out items\n")
+		return
+
+	# Get user profile
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT fines FROM User WHERE userID=:user_id"
+		cur.execute(sql_query, {'user_id': user_id})
+		row = cur.fetchone()
+
+		if row:
+			print(f"Total fines: $ {row[0]}")
+
+			if row[0] > 0:
+				print("You cannot borrow any items if you have fines.")
+				return
+		else:
+			print("User does not exist (somehow)")
+			return
+
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT BorrowedItem.libraryItemID, itemName, author, dueDate FROM BorrowedItem NATURAL JOIN LibraryItem NATURAL JOIN Item WHERE userID=:userID AND returnedDate IS NULL"
+		cur.execute(sql_query, {'userID': user_id})
+
+		rows = cur.fetchall()
+
+		print("### Currently borrowing ###")
+		print("\n")
+		if rows:
+			for row in rows:
+				print(f"- (ID: {row[0]}) {row[1]} by {row[2]} DUE {row[3]}")
+		else:
+			print("---")
+		print("\n")
+
+	type_query = None
+	while type_query != "movie" and type_query != "book" and type_query != "song" and type_query != "paper":
+		type_query = get_non_empty_string("Type of item [book/movie/song/paper]: ", 30)
+		if type_query != "book" and type_query != "movie" and type_query != "song" and type_query != "paper":
+			print("Invalid type. Must be either \"book\", \"movie\", \"song\", \"paper\"")
+
+	title_query = get_non_empty_string("Enter title: ", 30)
+	author_query = get_non_empty_string("Enter author: ", 30)
+
+	# Search if the item exists
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT libraryItemID, itemName, author FROM LibraryItem NATURAL JOIN Item WHERE type=:type AND itemName=:title AND author=:author AND (toBeAdded IS NULL OR toBeAdded = 0)"
+		cur.execute(sql_query, {'type':type_query, 'title':title_query, 'author':author_query})
+
+		rows = cur.fetchall()
+
+		if rows:
+			with conn:
+				cur = conn.cursor()
+				sql_query = "SELECT libraryItemID FROM BorrowedItem WHERE libraryItemID=:id AND returnedDate IS NULL"
+				cur.execute(sql_query, {'id': rows[0][0]})
+
+				rowsBorrowed = cur.fetchall()
+
+				if rowsBorrowed:
+					print("No available item")
+					return
+				else:
+					for row in rows:
+						print(f"- (ID: {row[0]}) {row[1]} by {row[2]}")
+		else:
+			print("Sorry. Cannot find the item you're looking for.")
+			return
+
+	library_item_id = get_int("Enter item ID to borrow it: ", 0)
+
+	# check if it is in BorrowedItem and if item has not been returned
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT itemName FROM BorrowedItem NATURAL JOIN LibraryItem NATURAL JOIN Item WHERE BorrowedItem.libraryItemID=:id AND returnedDate IS NULL"
+		cur.execute(sql_query, {'id': library_item_id})
+
+		rows = cur.fetchall()
+
+		if rows:
+			print("Sorry. Item not available to be taken out.")
+			return
+
+	# Take out the item
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT itemName, author FROM LibraryItem NATURAL JOIN Item WHERE libraryItemID=:id"
+		cur.execute(sql_query, {'id': library_item_id})
+
+		row = cur.fetchone()
+
+		if row:
+			with conn:
+				cur = conn.cursor()
+				sql_query = "INSERT INTO BorrowedItem(userID, libraryItemID) VALUES(:user, :item)"
+				try:
+					cur.execute(sql_query, {'user': user_id, 'item': library_item_id})
+				except sqlite3.IntegrityError:
+					print("Sorry, you failed to take out this item.")
+
+			print(f"Successfully borrowed {row[0]} by {row[1]}.")
+		else:
+			print("Sorry. Invalid library item id.")
+			return
 
 def donate():
 	type_query = None
