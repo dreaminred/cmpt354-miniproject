@@ -32,7 +32,9 @@ def main():
 		elif option == 5:
 			user_id = get_id_from_login(True) # Donate an item
 		elif option == 6:
-			user_id = get_id_from_login(True) # Find an event		
+			event_option = find_events(True) # Find an event and return whether user wants to register for it
+			if event_option == True:
+				register_for_event()
 		elif option == 7:
 			user_id = get_id_from_login(True) # Register for an event	
 		else:
@@ -225,6 +227,46 @@ def chk_conn(conn):
 		return True
 	except Exception as ex:
 		 return False
+
+def find_events():
+	print("Filter by: ")
+	option = create_options_list("By Room", "By Date Range", "By Audience")
+	attribute = ['room', 'audience']
+
+	if (option==0):
+		input_audience = get_non_empty_string("Enter targeted room:")
+
+	if (option==1):
+		input_startTS = get_non_empty_string("Enter starting timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):")
+		input_endTS = get_non_empty_string("Enter ending timestamp in ISO-8061 format (yyyy-mm-dd HH:MM):")
+	if (option==2):
+		input_audience = get_non_empty_string("Enter targeted audience:")
+	else:
+		print("Invalid Entry: " + str(option))
+		return False
+	
+	cur = conn.cursor()
+	
+	if ((option==0) or (option==2)):
+
+	eventQuery = "SELECT * FROM Librarian WHERE "+ +"=:libID"
+
+	cur.execute(nameQuery,{'libID':input_id})
+
+	rows = cur.fetchall()
+	
+	
+	
+
+	
+
+
+			
+
+
+def register_for_event():
+
+	pass
 
 
 if __name__=='__main__':
