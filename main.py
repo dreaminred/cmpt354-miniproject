@@ -1,6 +1,7 @@
 import sqlite3
 import random
 import datetime
+import time
 from os import path
 
 
@@ -17,7 +18,7 @@ def main():
 
 		print("\n")
 		print_credentials(user_id, user_type)
-		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Volunteer", "Ask for help", "Return an Item", "Exit")
+		option = create_options_list("User signup", "User login", "Staff login", "Find an item", "Borrow an item", "Donate an item", "Find and register for events", "Volunteer", "Ask for help", "Return an Item", "Pay fines", "Exit")
 
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
@@ -44,6 +45,8 @@ def main():
 			ask_for_help()
 		elif option == 9:
 			return_item(user_id, user_type)
+		elif option == 10:
+			pay_fines(user_id, user_type)
 		else:
 			conn.close()
 			print("Database closed successfully.")
@@ -554,6 +557,58 @@ def find_events(user_id='None', user_type='user'):
 				return True
 			except:
 				return False
+			
+def pay_fines(user_id, user_type):
+
+	if(((user_id==None) or (user_id=='Missing')) or (user_type!='User')):
+		print('You are not logged into a User account.')
+		return False
+	
+	with conn:
+		fineQuery = "SELECT fines FROM User WHERE userID=" + str(user_id)
+		cur = conn.cursor()
+		try:
+			cur.execute(fineQuery)
+		except:
+			print("Unable to find fines for the user.")
+	
+	rows = cur.fetchall()
+
+	if (len(rows) == 0):
+		print("Unable to find fines for the user.")
+		return False
+	
+	user_fine = rows[0][-1]
+
+	if (user_fine == 0):
+		print("Your balance is $0.00")
+		print("You have no overdue fees.")
+		time.sleep(1)
+		return False
+
+	print("Your balance is $" + str(user_fine))
+	user_option = get_int("Would you like to pay now?(0=No,1=Yes): ", 0)
+	if (user_option != 1):
+		return False
+	print("Insert $" + str(user_fine))
+	time.sleep(2)
+	print("Received $" + str(user_fine))
+
+	with conn:
+
+		cur = conn.cursor()
+		sql_query = "UPDATE User SET fines=0 WHERE userID=:userID"
+
+		try:
+			cur.execute(sql_query, {'userID' :  user_id})
+			print("Successfuly paid fines. Your new balance is $0.00")
+			time.sleep(2)
+			return True
+		except:
+			print("Failed to pay fine.")
+			print("Returning money.")
+			return False
+
 
 if __name__=='__main__':
 	main()
