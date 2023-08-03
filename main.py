@@ -504,10 +504,8 @@ def find_events(user_id='None', user_type='user'):
 	# Create the appropriate query 
 	if ((user_option==0) or (user_option==1)):
 		eventQuery = "SELECT * FROM Event WHERE " + attribute[user_option]+"=\""+input_user + "\""
-		print(eventQuery)
 	if ((user_option==2)):
 		eventQuery = "SELECT * FROM Event WHERE " + "startTS" + " BETWEEN \"" + input_startTS + "\" AND \"" + input_endTS + "\""
-		print(eventQuery)
 
 	# Get rows
 	with conn:
@@ -518,6 +516,10 @@ def find_events(user_id='None', user_type='user'):
 			print("Unable to execute query")
 
 	rows = cur.fetchall()
+
+	if(len(rows)==0):
+		print("No events found.")
+		return False
 
 	# Display results
 	for row, rowNum in zip(rows, range(len(rows))):
