@@ -372,10 +372,9 @@ def get_id_from_login(is_librarian=False):
 	"""
 	Ask user/librarian for their respective ID. 
 	Returns a tuple with their ID and respective ID type. 
-	Returns 'Missing' for both if ID does not exist
 	"""
-	returnedID = 'Missing'
-	returnedIDType = 'Missing'
+	returnedID = None
+	returnedIDType = None
 
 	if is_librarian:
 		input_id = get_int('Enter librarianID: ', 0)
@@ -418,10 +417,14 @@ def get_id_from_login(is_librarian=False):
 
 
 def print_credentials(id, idType):
-	creds = [' ',' ']
-	creds[0] = ('Missing') if (id == None) else id
-	creds[1] = ('Missing') if (idType == None) else idType
-	print('Credentials (userID, Type): ' + str(creds[0]) + '(' + str(creds[1]) +')')
+    print("========== CREDENTIALS ==========")
+    if id == None:
+        print(" Sign in for more features")
+    else:
+        print(f" Logged in with {idType} ID: {id}")
+
+    print("=================================")
+    return
 
 
 def create_options_list(*options):
