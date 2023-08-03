@@ -4,7 +4,7 @@ import datetime
 from os import path
 
 
-conn = sqlite3.connect(path.join("notebooks", "library.db"))
+conn = sqlite3.connect("library.db")
 
 
 def main():
