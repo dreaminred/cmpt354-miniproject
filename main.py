@@ -42,7 +42,7 @@ def main():
 		elif option == 7:
 			volunteer(user_id, user_type)
 		elif option == 8:
-			ask_for_help()
+			ask_for_help(user_id, user_type)
 		elif option == 9:
 			return_item(user_id, user_type)
 		elif option == 10:
@@ -121,21 +121,41 @@ def volunteer(user_id, user_type):
 		first_name = row[0]
 		last_name = row[1]
 
+	# check if user has already signed up to be a librarian
+	with conn:
+		cur = conn.cursor()
+		sql_query = "SELECT librarianID FROM Librarian WHERE userID=:id"
+		cur.execute(sql_query, {'id': user_id})
+
+		row = cur.fetchone()
+		if row:
+			print(f"You are already signed up as a librarian with an ID of {row[0]}")
+			return
+
+	# register as volunteer, assumes they are not already a volunteer/librarian since above code checks it
 	id = 0
 	with conn:
 		cur = conn.cursor()
-		sql_query = "INSERT INTO Librarian(librarianID, firstName, lastName, department) VALUES(:libID, :firstName, :lastName, :department)"
+		sql_query = "INSERT INTO Librarian(librarianID, userID, firstName, lastName, department) VALUES(:libID, :userID, :firstName, :lastName, :department)"
 
 		while True:
 			try:
-				cur.execute(sql_query, {'libID': id, 'firstName': first_name, 'lastName': last_name, 'department': 'volunteer'})
+				cur.execute(sql_query, {'libID': id, 'userID': user_id, 'firstName': first_name, 'lastName': last_name, 'department': 'volunteer'})
 				break;
 			except sqlite3.IntegrityError:
 				id = id + 1
 
 	print(f"Success. You are now a volunteer and can log in as Staff using the id {id} in `Staff Login`")
 
-def ask_for_help():
+def ask_for_help(user_id, user_type):
+	if user_id == None:
+		print("Must be logged in as a user")
+		return
+
+	if user_type != "User":
+		print("Must be logged in as a user")
+		return
+
 	with conn:
 		cur = conn.cursor()
 		sql_query = "SELECT firstName, lastName, department FROM Librarian WHERE department <> \"volunteer\""
@@ -162,14 +182,12 @@ def find_item():
 
 		rows = cur.fetchall()
 
-		print("\n")
 		if rows:
-			print("Found item (note: some of them may currently be borrowed out/pending to be included on shelf):")
+			print("Found item (Note: use Borrow Item menu to see if it is currently available):")
 			for row in rows:
 				print(f"- (ID: {row[0]}) {row[1]} by {row[2]}")
 		else:
 			print("Item not in library")
-		print("\n")
 
 def borrow_item(user_id, user_type):
 	if user_id == None:
@@ -357,10 +375,9 @@ def get_id_from_login(is_librarian=False):
 	"""
 	Ask user/librarian for their respective ID. 
 	Returns a tuple with their ID and respective ID type. 
-	Returns 'Missing' for both if ID does not exist
 	"""
-	returnedID = 'Missing'
-	returnedIDType = 'Missing'
+	returnedID = None
+	returnedIDType = None
 
 	if is_librarian:
 		input_id = get_int('Enter librarianID: ', 0)
@@ -403,10 +420,14 @@ def get_id_from_login(is_librarian=False):
 
 
 def print_credentials(id, idType):
-	creds = [' ',' ']
-	creds[0] = ('Missing') if (id == None) else id
-	creds[1] = ('Missing') if (idType == None) else idType
-	print('Credentials (userID, Type): ' + str(creds[0]) + '(' + str(creds[1]) +')')
+    print("========== CREDENTIALS ==========")
+    if id == None:
+        print(" Sign in for more features")
+    else:
+        print(f" Logged in with {idType} ID: {id}")
+
+    print("=================================")
+    return
 
 
 def create_options_list(*options):
