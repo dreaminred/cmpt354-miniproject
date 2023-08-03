@@ -21,6 +21,7 @@ def main():
 
 		if option == 0:
 			user_id = get_id_from_signup() #Signup
+			user_type = "User"
 		elif option == 1:
 			user_id, user_type = get_id_from_login(False) # User login
 		elif option == 2:
